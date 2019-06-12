@@ -7,6 +7,7 @@ import (
 	"github.com/makocchi-git/kubectl-dfi/pkg/constants"
 
 	color "github.com/gookit/color"
+	v1 "k8s.io/api/core/v1"
 )
 
 func TestGetSiUnit(t *testing.T) {
@@ -172,4 +173,31 @@ func TestColorImageTag(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetImageUsage(t *testing.T) {
+
+	var expectedSize int64
+	var expectedCount int
+
+	expectedSize = 11111
+	expectedCount = 5
+	images := []v1.ContainerImage{
+		{Names: []string{"image1"}, SizeBytes: 1},
+		{Names: []string{"image2"}, SizeBytes: 10},
+		{Names: []string{"image3"}, SizeBytes: 100},
+		{Names: []string{"image4"}, SizeBytes: 1000},
+		{Names: []string{"image5"}, SizeBytes: 10000},
+	}
+
+	actualSize, actualCount := GetImageUsage(images)
+
+	if actualSize != expectedSize {
+		t.Errorf("Size check: expected(%d) differ (got: %d)", expectedSize, actualSize)
+	}
+
+	if actualCount != expectedCount {
+		t.Errorf("Count check: expected(%d) differ (got: %d)", expectedCount, actualCount)
+	}
+
 }

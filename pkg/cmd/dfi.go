@@ -211,27 +211,6 @@ func (o *DfiOptions) Run(args []string) error {
 	return nil
 }
 
-// toUnit calculate and add unit for int64
-func (o *DfiOptions) toUnit(i int64) string {
-
-	var unitbytes int64
-	var unitstr string
-
-	if o.binPrefix {
-		unitbytes, unitstr = util.GetBinUnit(o.bytes, o.kByte, o.mByte, o.gByte)
-	} else {
-		unitbytes, unitstr = util.GetSiUnit(o.bytes, o.kByte, o.mByte, o.gByte)
-	}
-
-	// -H adds human readable unit
-	unit := ""
-	if !o.withoutUnit {
-		unit = unitstr
-	}
-
-	return strconv.FormatInt(i/unitbytes, 10) + unit
-}
-
 // dfi prints image disk usage
 func (o *DfiOptions) dfi(nodes []v1.Node) error {
 
@@ -258,7 +237,7 @@ func (o *DfiOptions) dfi(nodes []v1.Node) error {
 		}
 
 		// get used storage by images and count images
-		used, count := getImageUsage(node.Status.Images)
+		used, count := util.GetImageUsage(node.Status.Images)
 
 		// with image count
 		icount := ""
@@ -266,16 +245,8 @@ func (o *DfiOptions) dfi(nodes []v1.Node) error {
 			icount = fmt.Sprintf("(%d)", count)
 		}
 
-		// image disk usage
-		percentage := (used * 100) / capacity
-
-		// set color
-		columnsPercent := strconv.FormatInt(percentage, 10) + "%"
-		if !o.nocolor {
-			util.SetPercentageColor(&columnsPercent, percentage, o.warnThreshold, o.critThreshold)
-		}
-
 		// columns
+		columnsPercent := o.getImageDiskUsage(used, capacity)
 		columnUsed := o.toUnit(used) + icount
 		columnAllocatable := o.toUnit(allocatable)
 		columnCapacity := o.toUnit(capacity)
@@ -328,12 +299,55 @@ func (o *DfiOptions) listImagesOnNode(nodes []v1.Node) error {
 	return nil
 }
 
-// getImageUsage returns total image size and count
-func getImageUsage(images []v1.ContainerImage) (int64, int) {
+// toUnit calculate and add unit for int64
+func (o *DfiOptions) toUnit(i int64) string {
 
-	var s int64
-	for _, image := range images {
-		s += image.SizeBytes
+	var unitbytes int64
+	var unitstr string
+
+	if o.binPrefix {
+		unitbytes, unitstr = util.GetBinUnit(o.bytes, o.kByte, o.mByte, o.gByte)
+	} else {
+		unitbytes, unitstr = util.GetSiUnit(o.bytes, o.kByte, o.mByte, o.gByte)
 	}
-	return s, len(images)
+
+	// -H adds human readable unit
+	unit := ""
+	if !o.withoutUnit {
+		unit = unitstr
+	}
+
+	// Old kubernetes do not support capacity attribute.
+	if i == 0 {
+		return "N/A"
+	}
+
+	return strconv.FormatInt(i/unitbytes, 10) + unit
+}
+
+func (o *DfiOptions) getImageDiskUsage(used, capacity int64) string {
+
+	var ret string
+
+	// Old kubernetes do not support capacity attribute.
+	// So I should avoid panic with "integer divide by zero"
+	if capacity == 0 {
+		ret = "N/A"
+	} else {
+		p := (used * 100) / capacity
+
+		// maybe something wrong
+		if p > 100 {
+			p = 100
+		}
+
+		ret = strconv.FormatInt(p, 10) + "%"
+
+		// set color
+		if !o.nocolor {
+			util.SetPercentageColor(&ret, p, o.warnThreshold, o.critThreshold)
+		}
+	}
+
+	return ret
 }
