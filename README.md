@@ -1,5 +1,7 @@
 # kubectl dfi
 
+[![Build Status](https://travis-ci.org/makocchi-git/kubectl-dfi.svg?branch=master)](https://travis-ci.org/makocchi-git/kubectl-dfi)
+
 Print disk usage of container image on Kubernetes node(s) like a linux "df" command.  
 
 ```shell
