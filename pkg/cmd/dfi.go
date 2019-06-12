@@ -156,7 +156,7 @@ func (o *DfOptions) Validate() error {
 
 	if o.warnThreshold > o.critThreshold {
 		return fmt.Errorf(
-			"Can not set critical threshold less than warn threshold (warn:%d crit:%d)", o.warnThreshold, o.critThreshold,
+			"can not set critical threshold less than warn threshold (warn:%d crit:%d)", o.warnThreshold, o.critThreshold,
 		)
 	}
 
@@ -179,14 +179,14 @@ func (o *DfOptions) Run(args []string) error {
 		for _, a := range args {
 			n, nerr := client.CoreV1().Nodes().Get(a, metav1.GetOptions{})
 			if nerr != nil {
-				return fmt.Errorf("Failed to get node: %v", nerr)
+				return fmt.Errorf("failed to get node: %v", nerr)
 			}
 			nodes = append(nodes, *n)
 		}
 	} else {
 		na, naerr := client.CoreV1().Nodes().List(metav1.ListOptions{LabelSelector: o.labelSelector})
 		if naerr != nil {
-			return fmt.Errorf("Failed to get nodes: %v", naerr)
+			return fmt.Errorf("failed to get nodes: %v", naerr)
 		}
 		nodes = append(nodes, na.Items...)
 	}
@@ -244,13 +244,13 @@ func (o *DfOptions) dfi(nodes []v1.Node) error {
 		// get status.capacity
 		capacity, cerr := node.Status.Capacity.StorageEphemeral().AsInt64()
 		if !cerr {
-			return fmt.Errorf("Can not get ephemeral storage capacity")
+			return fmt.Errorf("can not get ephemeral storage capacity")
 		}
 
 		// get status.allocatable
 		allocatable, aerr := node.Status.Allocatable.StorageEphemeral().AsInt64()
 		if !aerr {
-			return fmt.Errorf("Can not get ephemeral storage capacity")
+			return fmt.Errorf("can not get ephemeral storage capacity")
 		}
 
 		// get used storage by images and count images
@@ -329,7 +329,7 @@ func getImageUsage(images []v1.ContainerImage) (int64, int) {
 
 	var s int64
 	for _, image := range images {
-		s = s + image.SizeBytes
+		s += image.SizeBytes
 	}
 	return s, len(images)
 }
