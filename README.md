@@ -32,8 +32,11 @@ node1-default-pool-500decb4-5q58   102319K      k8s.gcr.io/kubernetes-dashboard-
 ## Install
 
 ```shell
-$ go build -o kubectl-dfi cmd/kubectl-dfi/root.go
-$ mv kubectl-dit /usr/local/bin/.
+$ make
+$ mv _output/kubectl-dfi /usr/local/bin/.
+
+# Happy dfi time!
+$ kubectl dfi
 ```
 
 ## Usage
