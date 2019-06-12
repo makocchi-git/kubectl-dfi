@@ -13,8 +13,8 @@ var (
 	// for goreleaser
 	// https://goreleaser.com/customization/#Builds
 	version = "master"
-	commit = "unknown"
-	date = "unknown"
+	commit  = "unknown"
+	date    = "unknown"
 )
 
 func main() {
