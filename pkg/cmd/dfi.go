@@ -96,7 +96,7 @@ func NewDfOptions(streams genericclioptions.IOStreams) *DfiOptions {
 }
 
 // NewCmdDf is a cobra command wrapping
-func NewCmdDf(streams genericclioptions.IOStreams) *cobra.Command {
+func NewCmdDf(streams genericclioptions.IOStreams, version, commit, date string) *cobra.Command {
 	o := NewDfOptions(streams)
 
 	cmd := &cobra.Command{
@@ -104,6 +104,7 @@ func NewCmdDf(streams genericclioptions.IOStreams) *cobra.Command {
 		Short:   "Show disk resources of images on Kubernetes nodes.",
 		Long:    dfiLong,
 		Example: dfiExample,
+		Version: version,
 		RunE: func(c *cobra.Command, args []string) error {
 			if err := o.Complete(c, args); err != nil {
 				return err
@@ -142,6 +143,9 @@ func NewCmdDf(streams genericclioptions.IOStreams) *cobra.Command {
 
 	// add the klog flags
 	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
+
+	// version command template
+	cmd.SetVersionTemplate("Version: " + version + ", GitCommit: " + commit + ", BuildDate: " + date + "\n")
 
 	return cmd
 }
