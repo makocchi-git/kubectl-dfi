@@ -16,5 +16,10 @@ script:
   - golangci-lint run
   - go test -v -race ./...
 
-after_success:
-  - goreleaser
+deploy:
+  - provider: script
+    skip_cleanup: true
+    script: curl -sL https://git.io/goreleaser | bash
+    on:
+      tags: true
+ 
