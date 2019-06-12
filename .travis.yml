@@ -12,8 +12,8 @@ before_script:
   - go install github.com/golangci/golangci-lint/cmd/golangci-lint
 
 script:
-  - golangci-lint run
-  - go test -v -race ./...
+  - golangci-lint run -E stylecheck -E gocritic
+  - go test -v -race $(go list ./... | grep -v /constants | grep -v /cmd)
 
 deploy:
   - provider: script

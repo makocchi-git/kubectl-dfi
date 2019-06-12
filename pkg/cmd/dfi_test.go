@@ -14,7 +14,7 @@ func TestValidate(t *testing.T) {
 		crit        int64
 		expected    string
 	}{
-		{"crit < warn", 25, 10, "Can not set critical threshold less than warn threshold (warn:25 crit:10)"},
+		{"crit < warn", 25, 10, "can not set critical threshold less than warn threshold (warn:25 crit:10)"},
 		{"crit > warn", 25, 30, ""},
 		{"warn = crit", 25, 25, ""},
 	}
