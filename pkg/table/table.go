@@ -42,7 +42,7 @@ func (t *OutputTable) Print() {
 	printer.Flush()
 }
 
-// AddRow adds row to table
+// AddHeader adds row to table
 func (t *OutputTable) AddHeader(s []string) {
 	t.Header = util.JoinTab(s)
 }

@@ -207,7 +207,7 @@ func (o *DfOptions) Run(args []string) error {
 	return nil
 }
 
-// toUnit caluculate and add unit for int64
+// toUnit calculate and add unit for int64
 func (o *DfOptions) toUnit(i int64) string {
 
 	var unitbytes int64
