@@ -58,3 +58,7 @@ kubectl dfi --list
 
 `IMAGE USED` is simply sum up of container image size.  
 In fact, node disk is not used so much because container images are cached by layerd filesystem.
+
+## License
+
+This software is released under the MIT License.
