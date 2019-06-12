@@ -10,7 +10,6 @@ install: true
 
 before_script:
   - go install github.com/golangci/golangci-lint/cmd/golangci-lint
-  - go get -u github.com/goreleaser/goreleaser
 
 script:
   - golangci-lint run
