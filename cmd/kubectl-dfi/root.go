@@ -12,7 +12,9 @@ import (
 
 func init() {
 	// Initialize glog flags
-	flag.CommandLine.Set("all", "false")
+	if err := flag.CommandLine.Set("all", "false"); err != nil {
+		os.Exit(1)
+	}
 }
 
 func main() {

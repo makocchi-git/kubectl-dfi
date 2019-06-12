@@ -80,7 +80,6 @@ func SetPercentageColor(s *string, p, warn, crit int64) {
 	}
 
 	*s = red(*s)
-	return
 }
 
 // ColorImageTag is colorize image tag
@@ -98,7 +97,4 @@ func ColorImageTag(image *string) {
 		// rejoin strings
 		*image = strings.Join(s[0:sl-1], ":") + ":" + tag
 	}
-
-	// nothing to do 
-	return
 }

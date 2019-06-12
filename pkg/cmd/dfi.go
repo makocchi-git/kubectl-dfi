@@ -52,8 +52,6 @@ type DfOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 	genericclioptions.IOStreams
 
-	args []string
-
 	// general options
 	labelSelector string
 	count         bool
@@ -64,7 +62,6 @@ type DfOptions struct {
 	kByte       bool
 	mByte       bool
 	gByte       bool
-	output      string
 	withoutUnit bool
 	binPrefix   bool
 
@@ -191,9 +188,7 @@ func (o *DfOptions) Run(args []string) error {
 		if naerr != nil {
 			return fmt.Errorf("Failed to get nodes: %v", naerr)
 		}
-		for _, n := range na.Items {
-			nodes = append(nodes, n)
-		}
+		nodes = append(nodes, na.Items...)
 	}
 
 	// list images and return
