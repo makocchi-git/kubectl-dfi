@@ -21,12 +21,12 @@ import (
 
 var (
 	// DfLong defines long description
-	DfLong = templates.LongDesc(`
+	dfiLong = templates.LongDesc(`
 		Show disk resources of images on Kubernetes nodes.
 	`)
 
 	// DfExample defines command examples
-	DfExample = templates.Examples(`
+	dfiExample = templates.Examples(`
 		# Show image usage of Kubernetes nodes.
 		kubectl dfi
 
@@ -102,8 +102,8 @@ func NewCmdDf(streams genericclioptions.IOStreams) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     fmt.Sprintf("kubectl dfi"),
 		Short:   "Show disk resources of images on Kubernetes nodes.",
-		Long:    DfLong,
-		Example: DfExample,
+		Long:    dfiLong,
+		Example: dfiExample,
 		RunE: func(c *cobra.Command, args []string) error {
 			if err := o.Complete(c, args); err != nil {
 				return err
