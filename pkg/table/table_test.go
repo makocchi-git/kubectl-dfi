@@ -1,10 +1,10 @@
 package table
 
 import (
-	"testing"
 	"bytes"
 	"os"
 	"reflect"
+	"testing"
 )
 
 func TestNewOutputTable(t *testing.T) {
@@ -26,7 +26,7 @@ func TestPrint(t *testing.T) {
 
 	var tests = []struct {
 		description string
-		rows       []string
+		rows        []string
 		expected    string
 	}{
 		{"1 row", []string{"1\t2"}, "a     b\n1     2\n"},
@@ -40,7 +40,7 @@ func TestPrint(t *testing.T) {
 		t.Run(test.description, func(t *testing.T) {
 			table := &OutputTable{
 				Header: "a\tb",
-				Rows: test.rows,
+				Rows:   test.rows,
 				Output: buffer,
 			}
 
@@ -71,8 +71,8 @@ func TestAddHeader(t *testing.T) {
 
 func TestAddRow(t *testing.T) {
 	table := &OutputTable{}
-	table.AddRow([]string{"1","2","3"})
-	table.AddRow([]string{"4","5","6"})
+	table.AddRow([]string{"1", "2", "3"})
+	table.AddRow([]string{"4", "5", "6"})
 
 	rows := table.Rows
 

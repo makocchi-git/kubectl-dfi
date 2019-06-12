@@ -148,7 +148,7 @@ func TestColorImageTag(t *testing.T) {
 
 	var tests = []struct {
 		description string
-		image  string
+		image       string
 		expected    string
 	}{
 		{"one delimiter", "abc/def:latest", "abc/def:" + yellow("latest")},

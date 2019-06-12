@@ -218,7 +218,7 @@ func (o *DfOptions) toUnit(i int64) string {
 	} else {
 		unitbytes, unitstr = util.GetSiUnit(o.bytes, o.kByte, o.mByte, o.gByte)
 	}
-	
+
 	// -H adds human readable unit
 	unit := ""
 	if !o.withoutUnit {

@@ -9,7 +9,7 @@ const (
 	//
 	// International System of Units (SI prefix)
 	//
-	
+
 	// UnitKiloBytes is bytes for "KiBytes" output
 	UnitKiloBytes = UnitBytes * 1000
 
@@ -52,5 +52,4 @@ const (
 
 	// UnitGibiBytesStr is unit string for gigabytes
 	UnitGibiBytesStr = "Gi"
-
 )
