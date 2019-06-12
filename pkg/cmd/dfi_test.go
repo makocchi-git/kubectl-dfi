@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"testing"
-
-	v1 "k8s.io/api/core/v1"
 )
 
 func TestValidate(t *testing.T) {
@@ -53,6 +51,7 @@ func TestToUnit(t *testing.T) {
 		{"si prefix with unit", 6000, false, false, "6K"},
 		{"binary prefix without unit", 12345, true, true, "12"},
 		{"binary prefix with unit", 6000, true, false, "5Ki"},
+		{"0 case", 0, true, false, "N/A"},
 	}
 
 	o := &DfiOptions{
@@ -80,29 +79,38 @@ func TestToUnit(t *testing.T) {
 	}
 }
 
-func TestGetImageUsage(t *testing.T) {
+func TestGetImageDiskUsage(t *testing.T) {
 
-	var expectedSize int64
-	var expectedCount int
-
-	expectedSize = 11111
-	expectedCount = 5
-	images := []v1.ContainerImage{
-		{Names: []string{"image1"}, SizeBytes: 1},
-		{Names: []string{"image2"}, SizeBytes: 10},
-		{Names: []string{"image3"}, SizeBytes: 100},
-		{Names: []string{"image4"}, SizeBytes: 1000},
-		{Names: []string{"image5"}, SizeBytes: 10000},
+	var tests = []struct {
+		description string
+		used        int64
+		capacity    int64
+		nocolor     bool
+		expected    string
+	}{
+		{"10%", 10, 100, false, "10%"},
+		{"100%", 100, 100, false, "100%"},
+		{"over 100%", 123, 100, false, "100%"},
+		{"N/A", 0, 0, false, "N/A"},
 	}
 
-	actualSize, actualCount := getImageUsage(images)
-
-	if actualSize != expectedSize {
-		t.Errorf("Size check: expected(%d) differ (got: %d)", expectedSize, actualSize)
+	for _, test := range tests {
+		t.Run(test.description, func(t *testing.T) {
+			o := &DfiOptions{
+				nocolor:       test.nocolor,
+				warnThreshold: 25,
+				critThreshold: 50,
+			}
+			actual := o.getImageDiskUsage(test.used, test.capacity)
+			if actual != test.expected {
+				t.Errorf(
+					"[%s] expected(%s) differ (got: %s)",
+					test.description,
+					test.expected,
+					actual,
+				)
+				return
+			}
+		})
 	}
-
-	if actualCount != expectedCount {
-		t.Errorf("Count check: expected(%d) differ (got: %d)", expectedCount, actualCount)
-	}
-
 }

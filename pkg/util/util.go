@@ -4,6 +4,8 @@ import (
 	"strings"
 
 	color "github.com/gookit/color"
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/makocchi-git/kubectl-dfi/pkg/constants"
 )
 
@@ -97,4 +99,14 @@ func ColorImageTag(image *string) {
 		// rejoin strings
 		*image = strings.Join(s[0:sl-1], ":") + ":" + tag
 	}
+}
+
+// GetImageUsage returns total image size and count
+func GetImageUsage(images []v1.ContainerImage) (int64, int) {
+
+	var s int64
+	for _, image := range images {
+		s += image.SizeBytes
+	}
+	return s, len(images)
 }
