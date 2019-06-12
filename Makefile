@@ -32,3 +32,7 @@ lint-install:
 .PHONY: lint
 lint: 
 	${GOLINT} run -E stylecheck -E gocritic
+
+.PHONY: fmt
+fmt: 
+	${GO} fmt ./...
