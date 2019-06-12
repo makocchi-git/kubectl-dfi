@@ -47,8 +47,8 @@ var (
 	`)
 )
 
-// DfOptions is struct of df options
-type DfOptions struct {
+// DfiOptions is struct of df options
+type DfiOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 	genericclioptions.IOStreams
 
@@ -75,8 +75,8 @@ type DfOptions struct {
 }
 
 // NewDfOptions is an instance of DfOptions
-func NewDfOptions(streams genericclioptions.IOStreams) *DfOptions {
-	return &DfOptions{
+func NewDfOptions(streams genericclioptions.IOStreams) *DfiOptions {
+	return &DfiOptions{
 		configFlags:   genericclioptions.NewConfigFlags(true),
 		bytes:         false,
 		kByte:         false,
@@ -147,12 +147,12 @@ func NewCmdDf(streams genericclioptions.IOStreams) *cobra.Command {
 }
 
 // Complete sets all information required for opening the service
-func (o *DfOptions) Complete(cmd *cobra.Command, args []string) error {
+func (o *DfiOptions) Complete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
 // Validate ensures that all required arguments and flag values are provided
-func (o *DfOptions) Validate() error {
+func (o *DfiOptions) Validate() error {
 
 	if o.warnThreshold > o.critThreshold {
 		return fmt.Errorf(
@@ -164,7 +164,7 @@ func (o *DfOptions) Validate() error {
 }
 
 // Run opens the service in the browser
-func (o *DfOptions) Run(args []string) error {
+func (o *DfiOptions) Run(args []string) error {
 
 	// get k8s client
 	restConfig, err := o.configFlags.ToRESTConfig()
@@ -208,7 +208,7 @@ func (o *DfOptions) Run(args []string) error {
 }
 
 // toUnit calculate and add unit for int64
-func (o *DfOptions) toUnit(i int64) string {
+func (o *DfiOptions) toUnit(i int64) string {
 
 	var unitbytes int64
 	var unitstr string
@@ -229,7 +229,7 @@ func (o *DfOptions) toUnit(i int64) string {
 }
 
 // dfi prints image disk usage
-func (o *DfOptions) dfi(nodes []v1.Node) error {
+func (o *DfiOptions) dfi(nodes []v1.Node) error {
 
 	// set printer header
 	headers := []string{"NAME", "IMAGE USED", "ALLOCATABLE", "CAPACITY", "%USED"}
@@ -291,7 +291,7 @@ func (o *DfOptions) dfi(nodes []v1.Node) error {
 	return nil
 }
 
-func (o *DfOptions) listImagesOnNode(nodes []v1.Node) error {
+func (o *DfiOptions) listImagesOnNode(nodes []v1.Node) error {
 
 	// set printer header
 	headers := []string{"NAME", "IMAGE SIZE", "IMAGE NAME"}

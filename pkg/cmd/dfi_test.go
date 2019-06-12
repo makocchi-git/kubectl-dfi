@@ -21,7 +21,7 @@ func TestValidate(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
-			o := &DfOptions{
+			o := &DfiOptions{
 				warnThreshold: test.warn,
 				critThreshold: test.crit,
 			}
@@ -55,7 +55,7 @@ func TestToUnit(t *testing.T) {
 		{"binary prefix with unit", 6000, true, false, "5Ki"},
 	}
 
-	o := &DfOptions{
+	o := &DfiOptions{
 		bytes: false,
 		kByte: true,
 		mByte: false,

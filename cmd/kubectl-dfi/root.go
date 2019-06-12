@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"os"
 
 	"github.com/makocchi-git/kubectl-dfi/pkg/cmd"
@@ -9,13 +8,6 @@ import (
 
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
-
-func init() {
-	// Initialize glog flags
-	if err := flag.CommandLine.Set("all", "false"); err != nil {
-		os.Exit(1)
-	}
-}
 
 func main() {
 	flags := pflag.NewFlagSet("kubectl-dfi", pflag.ExitOnError)
