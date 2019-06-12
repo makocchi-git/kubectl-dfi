@@ -12,3 +12,4 @@
 *.out
 
 /kubectl-dfi
+_output/
