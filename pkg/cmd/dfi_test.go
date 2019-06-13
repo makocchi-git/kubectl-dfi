@@ -88,10 +88,10 @@ func TestGetImageDiskUsage(t *testing.T) {
 		nocolor     bool
 		expected    string
 	}{
-		{"10%", 10, 100, false, "10%"},
-		{"100%", 100, 100, false, "100%"},
-		{"over 100%", 123, 100, false, "100%"},
-		{"N/A", 0, 0, false, "N/A"},
+		{"10%", 10, 100, true, "10%"},
+		{"100%", 100, 100, true, "100%"},
+		{"over 100%", 123, 100, true, "100%"},
+		{"N/A", 0, 0, true, "N/A"},
 	}
 
 	for _, test := range tests {
