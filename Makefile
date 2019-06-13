@@ -2,12 +2,12 @@ SHELL=/bin/bash -o pipefail
 
 GO ?= go
 GOLINT ?= golangci-lint
-GOLINT_ARG ?= run -E stylecheck -E gocritic
 
 COMMIT_HASH := $(shell git rev-parse --short HEAD 2> /dev/null || true)
+GIT_TAG := $(shell git describe --tags --dirty --always)
 
-LDFLAGS := -ldflags '-X main.commit=${COMMIT_HASH} -X main.date=$(shell date +%s)'
-TESTPACKAGES := $(shell go list ./... | grep -v /constants | grep -v /cmd)
+LDFLAGS := -ldflags '-X main.commit=${COMMIT_HASH} -X main.date=$(shell date +%s) -X main.version=${GIT_TAG}'
+TESTPACKAGES := $(shell go list ./... | grep -v /constants | grep -v /cmd/)
 
 kubectl_dfi ?= _output/kubectl-dfi
 
@@ -15,7 +15,7 @@ kubectl_dfi ?= _output/kubectl-dfi
 build: clean ${kubectl_dfi}
 
 ${kubectl_dfi}:
-	$(GO) build ${LDFLAGS} -o $@ ./cmd/kubectl-dfi/root.go
+	GO111MODULE=on CGO_ENABLED=0 $(GO) build ${LDFLAGS} -o $@ ./cmd/kubectl-dfi/root.go
 
 .PHONY: clean
 clean:
@@ -23,16 +23,16 @@ clean:
 
 .PHONY: test
 test:
-	$(GO) test -v -race $(TESTPACKAGES)
+	GO111MODULE=on $(GO) test -count=1 -v -race $(TESTPACKAGES)
 
 .PHONY: lint-install
 lint-install:
-	${GO} install github.com/golangci/golangci-lint/cmd/golangci-lint
+	GO111MODULE=on ${GO} install github.com/golangci/golangci-lint/cmd/golangci-lint
 
 .PHONY: lint
 lint: 
-	${GOLINT} run -E stylecheck -E gocritic
+	GO111MODULE=on ${GOLINT} run -E stylecheck -E gocritic
 
 .PHONY: fmt
 fmt: 
-	${GO} fmt ./...
+	${GO} fmt ./cmd/... ./pkg/...
