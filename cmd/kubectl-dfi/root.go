@@ -21,7 +21,7 @@ func main() {
 	flags := pflag.NewFlagSet("kubectl-dfi", pflag.ExitOnError)
 	pflag.CommandLine = flags
 
-	root := cmd.NewCmdDf(
+	root := cmd.NewCmdDfi(
 		genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr},
 		version,
 		commit,

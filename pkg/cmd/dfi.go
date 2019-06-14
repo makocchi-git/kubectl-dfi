@@ -3,6 +3,7 @@ package cmd
 import (
 	"flag"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/makocchi-git/kubectl-dfi/pkg/table"
@@ -75,7 +76,7 @@ type DfiOptions struct {
 }
 
 // NewDfOptions is an instance of DfOptions
-func NewDfOptions(streams genericclioptions.IOStreams) *DfiOptions {
+func NewDfiOptions(streams genericclioptions.IOStreams) *DfiOptions {
 	return &DfiOptions{
 		configFlags:   genericclioptions.NewConfigFlags(true),
 		bytes:         false,
@@ -91,13 +92,13 @@ func NewDfOptions(streams genericclioptions.IOStreams) *DfiOptions {
 		IOStreams:     streams,
 		labelSelector: "",
 		list:          false,
-		table:         table.NewOutputTable(),
+		table:         table.NewOutputTable(os.Stdout),
 	}
 }
 
 // NewCmdDf is a cobra command wrapping
-func NewCmdDf(streams genericclioptions.IOStreams, version, commit, date string) *cobra.Command {
-	o := NewDfOptions(streams)
+func NewCmdDfi(streams genericclioptions.IOStreams, version, commit, date string) *cobra.Command {
+	o := NewDfiOptions(streams)
 
 	cmd := &cobra.Command{
 		Use:     fmt.Sprintf("kubectl dfi"),

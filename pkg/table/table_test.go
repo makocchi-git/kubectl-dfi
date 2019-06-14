@@ -12,7 +12,7 @@ func TestNewOutputTable(t *testing.T) {
 		Output: os.Stdout,
 	}
 
-	actual := NewOutputTable()
+	actual := NewOutputTable(os.Stdout)
 
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("expected(%#v) differ (got: %#v)", expected, actual)

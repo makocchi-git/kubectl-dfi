@@ -1,8 +1,46 @@
 package cmd
 
 import (
+	"bytes"
+	"os"
+	"reflect"
 	"testing"
+
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	"github.com/makocchi-git/kubectl-dfi/pkg/table"
 )
+
+func TestNewDfiOptions(t *testing.T) {
+
+	streams := genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}
+
+	expected := &DfiOptions{
+		configFlags:   genericclioptions.NewConfigFlags(true),
+		bytes:         false,
+		kByte:         false,
+		mByte:         false,
+		gByte:         false,
+		withoutUnit:   false,
+		binPrefix:     false,
+		count:         false,
+		nocolor:       false,
+		warnThreshold: 25,
+		critThreshold: 50,
+		IOStreams:     streams,
+		labelSelector: "",
+		list:          false,
+		table:         table.NewOutputTable(os.Stdout),
+	}
+
+	actual := NewDfiOptions(streams)
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("expected(%#v) differ (got: %#v)", expected, actual)
+	}
+}
 
 func TestValidate(t *testing.T) {
 
@@ -77,6 +115,56 @@ func TestToUnit(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestListImagesOnNode(t *testing.T) {
+
+	nodes := []v1.Node{
+		{
+			ObjectMeta: metav1.ObjectMeta{Name: "node1"},
+			Status: v1.NodeStatus{
+				Images: []v1.ContainerImage{
+					{
+						Names:     []string{"image1", "image2"},
+						SizeBytes: 1000,
+					},
+				},
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{Name: "node2"},
+			Status: v1.NodeStatus{
+				Images: []v1.ContainerImage{
+					{
+						Names:     []string{"image1"},
+						SizeBytes: 2000,
+					},
+				},
+			},
+		},
+	}
+
+	buffer := &bytes.Buffer{}
+	o := &DfiOptions{
+		table: table.NewOutputTable(buffer),
+	}
+
+	// ---
+	// NAME    IMAGE SIZE   IMAGE NAME
+	// node1   1K           image2
+	// node2   2K           image1
+	// ---
+	expected := "NAME    IMAGE SIZE   IMAGE NAME\nnode1   1K           image2\nnode2   2K           image1\n"
+
+	if err := o.listImagesOnNode(nodes); err != nil {
+		t.Errorf("unexpected error: %v", err)
+		return
+	}
+
+	if buffer.String() != expected {
+		t.Errorf("expected(%#v) differ (got: %#v)", expected, buffer.String())
+	}
+
 }
 
 func TestGetImageDiskUsage(t *testing.T) {
