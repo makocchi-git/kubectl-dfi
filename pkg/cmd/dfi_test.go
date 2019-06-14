@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
-	"github.com/spf13/cobra"
 	color "github.com/gookit/color"
+	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -44,11 +45,94 @@ func TestNewDfiOptions(t *testing.T) {
 	}
 }
 
+func TestNewCmdDfi(t *testing.T) {
+
+	rootCmd := NewCmdDfi(
+		genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr},
+		"v0.0.1",
+		"abcd123",
+		"1234567890",
+	)
+
+	// Version check
+	t.Run("version", func(t *testing.T) {
+		expected := "Version: v0.0.1, GitCommit: abcd123, BuildDate: 1234567890\n"
+		actual, err := executeCommand(rootCmd, "--version")
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+
+		// if strings.Contains(output, "kubectl-dfi")
+		if actual != expected {
+			t.Errorf("expected(%s) differ (got: %s)", expected, actual)
+			return
+		}
+	})
+
+	// Usage
+	t.Run("usage", func(t *testing.T) {
+		expected := "kubectl dfi [flags]"
+		actual, err := executeCommand(rootCmd, "--help")
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+
+		if !strings.Contains(actual, expected) {
+			t.Errorf("expected(%s) differ (got: %s)", expected, actual)
+			return
+		}
+	})
+
+	// Unknown option
+	t.Run("usage", func(t *testing.T) {
+		expected := "unknown flag: --very-very-bad-option"
+		_, err := executeCommand(rootCmd, "--very-very-bad-option")
+		if err == nil {
+			t.Errorf("unexpected error: should return exit")
+			return
+		}
+
+		if err.Error() != expected {
+			t.Errorf("expected(%s) differ (got: %s)", expected, err.Error())
+			return
+		}
+	})
+
+	// RunE Validation error
+	t.Run("RunE validation error", func(t *testing.T) {
+
+		c := NewCmdDfi(
+			genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr},
+			"v0.0.1",
+			"abcd123",
+			"1234567890",
+		)
+
+		err := c.ParseFlags([]string{"--crit-threshold=5"})
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+			return
+		}
+
+		rerr := c.RunE(c, []string{})
+		if rerr == nil {
+			t.Errorf("unexpected error: should return error")
+			return
+		}
+
+		expected := "can not set critical threshold less than warn threshold (warn:25 crit:5)"
+		if rerr.Error() != expected {
+			t.Errorf("expected(%s) differ (got: %s)", expected, rerr.Error())
+			return
+		}
+	})
+}
+
 func TestComplete(t *testing.T) {
 
 	cmd := &cobra.Command{
-		Use:     "test",
-		Short:   "test short",
+		Use:   "test",
+		Short: "test short",
 	}
 
 	o := &DfiOptions{}
@@ -219,4 +303,20 @@ func TestGetImageDiskUsage(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Test Helper
+func executeCommand(root *cobra.Command, args ...string) (output string, err error) {
+	_, output, err = executeCommandC(root, args...)
+	return output, err
+}
+
+func executeCommandC(root *cobra.Command, args ...string) (c *cobra.Command, output string, err error) {
+	buf := new(bytes.Buffer)
+	root.SetOutput(buf)
+	root.SetArgs(args)
+
+	c, err = root.ExecuteC()
+
+	return c, buf.String(), err
 }

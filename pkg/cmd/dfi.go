@@ -107,13 +107,18 @@ func NewCmdDfi(streams genericclioptions.IOStreams, version, commit, date string
 		Example: dfiExample,
 		Version: version,
 		RunE: func(c *cobra.Command, args []string) error {
-			if err := o.Complete(c, args); err != nil {
-				return err
-			}
+			c.SilenceUsage = true
+
+			// TODO: Currently not implemented
+			_ = o.Complete(c, args)
+			// if err := o.Complete(c, args); err != nil {
+			// 	return err
+			// }
+
 			if err := o.Validate(); err != nil {
 				return err
 			}
-			c.SilenceUsage = true
+
 			if err := o.Run(args); err != nil {
 				return err
 			}
