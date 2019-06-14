@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/spf13/cobra"
+	color "github.com/gookit/color"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -39,6 +41,19 @@ func TestNewDfiOptions(t *testing.T) {
 
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("expected(%#v) differ (got: %#v)", expected, actual)
+	}
+}
+
+func TestComplete(t *testing.T) {
+
+	cmd := &cobra.Command{
+		Use:     "test",
+		Short:   "test short",
+	}
+
+	o := &DfiOptions{}
+	if err := o.Complete(cmd, []string{}); err != nil {
+		t.Errorf("unexpected error: %v", err)
 	}
 }
 
@@ -169,6 +184,8 @@ func TestListImagesOnNode(t *testing.T) {
 
 func TestGetImageDiskUsage(t *testing.T) {
 
+	red := color.FgRed.Render
+
 	var tests = []struct {
 		description string
 		used        int64
@@ -180,6 +197,7 @@ func TestGetImageDiskUsage(t *testing.T) {
 		{"100%", 100, 100, true, "100%"},
 		{"over 100%", 123, 100, true, "100%"},
 		{"N/A", 0, 0, true, "N/A"},
+		{"100% with color", 100, 100, false, red("100%")},
 	}
 
 	for _, test := range tests {
