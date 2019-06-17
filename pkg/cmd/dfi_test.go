@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"reflect"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	fake "k8s.io/client-go/kubernetes/fake"
 
 	"github.com/makocchi-git/kubectl-dfi/pkg/table"
 )
@@ -20,7 +22,10 @@ import (
 // test node object
 var testNodes = []v1.Node{
 	{
-		ObjectMeta: metav1.ObjectMeta{Name: "node1"},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   "node1",
+			Labels: map[string]string{"hostname": "node1"},
+		},
 		Status: v1.NodeStatus{
 			Images: []v1.ContainerImage{
 				{
@@ -214,6 +219,114 @@ func TestValidate(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
+
+	var tests = []struct {
+		description string
+		args        []string
+		list        bool
+		label       string
+		expected    []string
+		expectedErr error
+	}{
+		{
+			"dfi args0 : two node",
+			[]string{},
+			false,
+			"",
+			[]string{
+				"NAME    IMAGE USED   ALLOCATABLE   CAPACITY    %USED",
+				"node1   1K           5000000K      10000000K   0%",
+				"node2   2K           5000000K      10000000K   0%",
+				"",
+			},
+			nil,
+		},
+		{
+			"dfi args0 : label",
+			[]string{},
+			false,
+			"hostname=node1",
+			[]string{
+				"NAME    IMAGE USED   ALLOCATABLE   CAPACITY    %USED",
+				"node1   1K           5000000K      10000000K   0%",
+				"",
+			},
+			nil,
+		},
+		{
+			"dfi args0 : invalid label",
+			[]string{},
+			false,
+			"hostname=hogehogehoge",
+			[]string{
+				"NAME   IMAGE USED   ALLOCATABLE   CAPACITY   %USED",
+				"",
+			},
+			nil,
+		},
+		{
+			"dfi args1 : one node",
+			[]string{"node2"},
+			false,
+			"",
+			[]string{
+				"NAME    IMAGE USED   ALLOCATABLE   CAPACITY    %USED",
+				"node2   2K           5000000K      10000000K   0%",
+				"",
+			},
+			nil,
+		},
+		{
+			"dfi args1 : invalid node",
+			[]string{"node3"},
+			false,
+			"",
+			[]string{},
+			fmt.Errorf("failed to get node: nodes \"node3\" not found"),
+		},
+		{
+			"list args0",
+			[]string{},
+			true,
+			"",
+			[]string{
+				"NAME    IMAGE SIZE   IMAGE NAME",
+				"node1   1K           image2",
+				"node2   2K           image1",
+				"",
+			},
+			nil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.description, func(t *testing.T) {
+
+			fakeClient := fake.NewSimpleClientset(&testNodes[0], &testNodes[1])
+			fakenode := fakeClient.CoreV1().Nodes()
+
+			buffer := &bytes.Buffer{}
+			o := &DfiOptions{
+				nocolor:       true,
+				table:         table.NewOutputTable(buffer),
+				list:          test.list,
+				labelSelector: test.label,
+				nodeClient:    fakenode,
+			}
+
+			if err := o.Run(test.args); !reflect.DeepEqual(err, test.expectedErr) {
+				t.Errorf("unexpected error: %v", err)
+				return
+			}
+
+			e := strings.Join(test.expected, "\n")
+			if buffer.String() != e {
+				t.Errorf("expected(%s) differ (got: %s)", e, buffer.String())
+				return
+			}
+
+		})
+	}
 
 }
 

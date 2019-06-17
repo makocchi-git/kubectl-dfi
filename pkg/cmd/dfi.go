@@ -185,7 +185,7 @@ func (o *DfiOptions) Validate() error {
 	return nil
 }
 
-// Run opens the service in the browser
+// Run printing disk usage of images
 func (o *DfiOptions) Run(args []string) error {
 
 	// get nodes
