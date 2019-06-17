@@ -13,3 +13,4 @@
 
 /kubectl-dfi
 _output/
+coverage.txt
