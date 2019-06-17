@@ -13,7 +13,11 @@ before_script:
 
 script:
   - golangci-lint run -E stylecheck -E gocritic
-  - go test -v -race $(go list ./... | grep -v /constants | grep -v /cmd)
+  - diff -u <(echo -n) <(gofmt -d .)
+  - go test -v -race -coverprofile coverage.txt $(go list ./... | grep -v /constants | grep -v /cmd/kubectl-dfi)
+
+after_script:
+  - bash <(curl -s https://codecov.io/bash)
 
 deploy:
   - provider: script

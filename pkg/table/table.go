@@ -3,7 +3,6 @@ package table
 import (
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/makocchi-git/kubectl-dfi/pkg/util"
 
@@ -18,9 +17,9 @@ type OutputTable struct {
 }
 
 // NewOutputTable is an instance of OutputTable
-func NewOutputTable() *OutputTable {
+func NewOutputTable(o io.Writer) *OutputTable {
 	return &OutputTable{
-		Output: os.Stdout,
+		Output: o,
 	}
 }
 

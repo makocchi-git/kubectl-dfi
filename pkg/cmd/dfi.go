@@ -3,6 +3,7 @@ package cmd
 import (
 	"flag"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/makocchi-git/kubectl-dfi/pkg/table"
@@ -13,6 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
+	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/kubernetes/pkg/kubectl/util/templates"
 
 	// Initialize all known client auth plugins.
@@ -72,10 +74,13 @@ type DfiOptions struct {
 
 	// list options
 	list bool
+
+	// k8s node client
+	nodeClient clientv1.NodeInterface
 }
 
 // NewDfOptions is an instance of DfOptions
-func NewDfOptions(streams genericclioptions.IOStreams) *DfiOptions {
+func NewDfiOptions(streams genericclioptions.IOStreams) *DfiOptions {
 	return &DfiOptions{
 		configFlags:   genericclioptions.NewConfigFlags(true),
 		bytes:         false,
@@ -91,13 +96,13 @@ func NewDfOptions(streams genericclioptions.IOStreams) *DfiOptions {
 		IOStreams:     streams,
 		labelSelector: "",
 		list:          false,
-		table:         table.NewOutputTable(),
+		table:         table.NewOutputTable(os.Stdout),
 	}
 }
 
 // NewCmdDf is a cobra command wrapping
-func NewCmdDf(streams genericclioptions.IOStreams, version, commit, date string) *cobra.Command {
-	o := NewDfOptions(streams)
+func NewCmdDfi(streams genericclioptions.IOStreams, version, commit, date string) *cobra.Command {
+	o := NewDfiOptions(streams)
 
 	cmd := &cobra.Command{
 		Use:     fmt.Sprintf("kubectl dfi"),
@@ -106,13 +111,16 @@ func NewCmdDf(streams genericclioptions.IOStreams, version, commit, date string)
 		Example: dfiExample,
 		Version: version,
 		RunE: func(c *cobra.Command, args []string) error {
-			if err := o.Complete(c, args); err != nil {
+			c.SilenceUsage = true
+
+			if err := o.Prepare(); err != nil {
 				return err
 			}
+
 			if err := o.Validate(); err != nil {
 				return err
 			}
-			c.SilenceUsage = true
+
 			if err := o.Run(args); err != nil {
 				return err
 			}
@@ -150,8 +158,18 @@ func NewCmdDf(streams genericclioptions.IOStreams, version, commit, date string)
 	return cmd
 }
 
-// Complete sets all information required for opening the service
-func (o *DfiOptions) Complete(cmd *cobra.Command, args []string) error {
+// Prepare sets client
+func (o *DfiOptions) Prepare() error {
+
+	// get k8s client
+	restConfig, err := o.configFlags.ToRESTConfig()
+	if err != nil {
+		return err
+	}
+
+	client := kubernetes.NewForConfigOrDie(restConfig)
+	o.nodeClient = client.CoreV1().Nodes()
+
 	return nil
 }
 
@@ -167,28 +185,21 @@ func (o *DfiOptions) Validate() error {
 	return nil
 }
 
-// Run opens the service in the browser
+// Run printing disk usage of images
 func (o *DfiOptions) Run(args []string) error {
-
-	// get k8s client
-	restConfig, err := o.configFlags.ToRESTConfig()
-	if err != nil {
-		return err
-	}
-	client := kubernetes.NewForConfigOrDie(restConfig)
 
 	// get nodes
 	nodes := []v1.Node{}
 	if len(args) > 0 {
 		for _, a := range args {
-			n, nerr := client.CoreV1().Nodes().Get(a, metav1.GetOptions{})
+			n, nerr := o.nodeClient.Get(a, metav1.GetOptions{})
 			if nerr != nil {
 				return fmt.Errorf("failed to get node: %v", nerr)
 			}
 			nodes = append(nodes, *n)
 		}
 	} else {
-		na, naerr := client.CoreV1().Nodes().List(metav1.ListOptions{LabelSelector: o.labelSelector})
+		na, naerr := o.nodeClient.List(metav1.ListOptions{LabelSelector: o.labelSelector})
 		if naerr != nil {
 			return fmt.Errorf("failed to get nodes: %v", naerr)
 		}
@@ -225,16 +236,10 @@ func (o *DfiOptions) dfi(nodes []v1.Node) error {
 		name := node.ObjectMeta.Name
 
 		// get status.capacity
-		capacity, cerr := node.Status.Capacity.StorageEphemeral().AsInt64()
-		if !cerr {
-			return fmt.Errorf("can not get ephemeral storage capacity")
-		}
+		capacity, _ := node.Status.Capacity.StorageEphemeral().AsInt64()
 
 		// get status.allocatable
-		allocatable, aerr := node.Status.Allocatable.StorageEphemeral().AsInt64()
-		if !aerr {
-			return fmt.Errorf("can not get ephemeral storage capacity")
-		}
+		allocatable, _ := node.Status.Allocatable.StorageEphemeral().AsInt64()
 
 		// get used storage by images and count images
 		used, count := util.GetImageUsage(node.Status.Images)

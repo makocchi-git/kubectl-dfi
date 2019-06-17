@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/makocchi-git/kubectl-dfi.svg?branch=master)](https://travis-ci.org/makocchi-git/kubectl-dfi)
 [![Maintainability](https://api.codeclimate.com/v1/badges/b92591d00becc95b11ca/maintainability)](https://codeclimate.com/github/makocchi-git/kubectl-dfi/maintainability)
 [![Go Report Card](https://goreportcard.com/badge/github.com/makocchi-git/kubectl-dfi)](https://goreportcard.com/report/github.com/makocchi-git/kubectl-dfi)
+[![codecov](https://codecov.io/gh/makocchi-git/kubectl-dfi/branch/master/graph/badge.svg)](https://codecov.io/gh/makocchi-git/kubectl-dfi)
 [![kubectl plugin](https://img.shields.io/badge/kubectl-plugin-blue.svg)](https://github.com/topics/kubectl-plugin)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
