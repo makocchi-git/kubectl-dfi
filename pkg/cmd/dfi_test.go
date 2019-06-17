@@ -10,9 +10,9 @@ import (
 	color "github.com/gookit/color"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/makocchi-git/kubectl-dfi/pkg/table"
 )
@@ -167,17 +167,16 @@ func TestNewCmdDfi(t *testing.T) {
 	})
 }
 
-func TestComplete(t *testing.T) {
+func TestPrepare(t *testing.T) {
 
-	cmd := &cobra.Command{
-		Use:   "test",
-		Short: "test short",
+	o := &DfiOptions{
+		configFlags: genericclioptions.NewConfigFlags(true),
 	}
 
-	o := &DfiOptions{}
-	if err := o.Complete(cmd, []string{}); err != nil {
+	if err := o.Prepare(); err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
+
 }
 
 func TestValidate(t *testing.T) {
@@ -225,7 +224,7 @@ func TestDfi(t *testing.T) {
 		buffer := &bytes.Buffer{}
 		o := &DfiOptions{
 			nocolor: true,
-			table: table.NewOutputTable(buffer),
+			table:   table.NewOutputTable(buffer),
 		}
 
 		// ---
@@ -255,8 +254,8 @@ func TestDfi(t *testing.T) {
 		buffer := &bytes.Buffer{}
 		o := &DfiOptions{
 			nocolor: true,
-			table: table.NewOutputTable(buffer),
-			count: true,
+			table:   table.NewOutputTable(buffer),
+			count:   true,
 		}
 
 		// ---

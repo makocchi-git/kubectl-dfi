@@ -14,8 +14,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/kubernetes/pkg/kubectl/util/templates"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/kubernetes/pkg/kubectl/util/templates"
 
 	// Initialize all known client auth plugins.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -76,7 +76,7 @@ type DfiOptions struct {
 	list bool
 
 	// k8s node client
-	nodeClient   clientv1.NodeInterface
+	nodeClient clientv1.NodeInterface
 }
 
 // NewDfOptions is an instance of DfOptions
@@ -113,11 +113,9 @@ func NewCmdDfi(streams genericclioptions.IOStreams, version, commit, date string
 		RunE: func(c *cobra.Command, args []string) error {
 			c.SilenceUsage = true
 
-			// TODO: Currently not implemented
-			_ = o.Complete(c, args)
-			// if err := o.Complete(c, args); err != nil {
-			// 	return err
-			// }
+			if err := o.Prepare(); err != nil {
+				return err
+			}
 
 			if err := o.Validate(); err != nil {
 				return err
@@ -160,8 +158,18 @@ func NewCmdDfi(streams genericclioptions.IOStreams, version, commit, date string
 	return cmd
 }
 
-// Complete sets all information required for opening the service
-func (o *DfiOptions) Complete(cmd *cobra.Command, args []string) error {
+// Prepare sets client
+func (o *DfiOptions) Prepare() error {
+
+	// get k8s client
+	restConfig, err := o.configFlags.ToRESTConfig()
+	if err != nil {
+		return err
+	}
+
+	client := kubernetes.NewForConfigOrDie(restConfig)
+	o.nodeClient = client.CoreV1().Nodes()
+
 	return nil
 }
 
@@ -180,25 +188,18 @@ func (o *DfiOptions) Validate() error {
 // Run opens the service in the browser
 func (o *DfiOptions) Run(args []string) error {
 
-	// get k8s client
-	restConfig, err := o.configFlags.ToRESTConfig()
-	if err != nil {
-		return err
-	}
-	client := kubernetes.NewForConfigOrDie(restConfig)
-
 	// get nodes
 	nodes := []v1.Node{}
 	if len(args) > 0 {
 		for _, a := range args {
-			n, nerr := client.CoreV1().Nodes().Get(a, metav1.GetOptions{})
+			n, nerr := o.nodeClient.Get(a, metav1.GetOptions{})
 			if nerr != nil {
 				return fmt.Errorf("failed to get node: %v", nerr)
 			}
 			nodes = append(nodes, *n)
 		}
 	} else {
-		na, naerr := client.CoreV1().Nodes().List(metav1.ListOptions{LabelSelector: o.labelSelector})
+		na, naerr := o.nodeClient.List(metav1.ListOptions{LabelSelector: o.labelSelector})
 		if naerr != nil {
 			return fmt.Errorf("failed to get nodes: %v", naerr)
 		}
