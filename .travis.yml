@@ -10,17 +10,14 @@ install: true
 
 before_script:
   - go install github.com/golangci/golangci-lint/cmd/golangci-lint
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  - chmod +x ./cc-test-reporter
-  - ./cc-test-reporter before-build
 
 script:
   - golangci-lint run -E stylecheck -E gocritic
   - diff -u <(echo -n) <(gofmt -d .)
-  - go test -v -race -coverprofile c.out $(go list ./... | grep -v /constants | grep -v /cmd/kubectl-dfi)
+  - go test -v -race -coverprofile coverage.txt $(go list ./... | grep -v /constants | grep -v /cmd/kubectl-dfi)
 
 after_script:
-  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+  - bash <(curl -s https://codecov.io/bash)
 
 deploy:
   - provider: script
