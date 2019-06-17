@@ -12,9 +12,48 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/makocchi-git/kubectl-dfi/pkg/table"
 )
+
+// test node object
+var testNodes = []v1.Node{
+	{
+		ObjectMeta: metav1.ObjectMeta{Name: "node1"},
+		Status: v1.NodeStatus{
+			Images: []v1.ContainerImage{
+				{
+					Names:     []string{"image1", "image2"},
+					SizeBytes: 1000,
+				},
+			},
+			Capacity: v1.ResourceList{
+				v1.ResourceEphemeralStorage: *resource.NewQuantity(10*1000*1000*1000, resource.DecimalSI),
+			},
+			Allocatable: v1.ResourceList{
+				v1.ResourceEphemeralStorage: *resource.NewQuantity(5*1000*1000*1000, resource.DecimalSI),
+			},
+		},
+	},
+	{
+		ObjectMeta: metav1.ObjectMeta{Name: "node2"},
+		Status: v1.NodeStatus{
+			Images: []v1.ContainerImage{
+				{
+					Names:     []string{"image1"},
+					SizeBytes: 2000,
+				},
+			},
+			Capacity: v1.ResourceList{
+				v1.ResourceEphemeralStorage: *resource.NewQuantity(10*1000*1000*1000, resource.DecimalSI),
+			},
+			Allocatable: v1.ResourceList{
+				v1.ResourceEphemeralStorage: *resource.NewQuantity(5*1000*1000*1000, resource.DecimalSI),
+			},
+		},
+	},
+}
 
 func TestNewDfiOptions(t *testing.T) {
 
@@ -175,6 +214,74 @@ func TestValidate(t *testing.T) {
 
 }
 
+func TestRun(t *testing.T) {
+
+}
+
+func TestDfi(t *testing.T) {
+
+	t.Run("without image count", func(t *testing.T) {
+
+		buffer := &bytes.Buffer{}
+		o := &DfiOptions{
+			nocolor: true,
+			table: table.NewOutputTable(buffer),
+		}
+
+		// ---
+		// NAME    IMAGE USED   ALLOCATABLE   CAPACITY    %USED
+		// node1   1K           5000000K      10000000K   0%
+		// node2   2K           5000000K      10000000K   0%
+		// ---
+		lines := []string{
+			"NAME    IMAGE USED   ALLOCATABLE   CAPACITY    %USED",
+			"node1   1K           5000000K      10000000K   0%",
+			"node2   2K           5000000K      10000000K   0%",
+			"",
+		}
+		expected := strings.Join(lines, "\n")
+		if err := o.dfi(testNodes); err != nil {
+			t.Errorf("unexpected error: %v", err)
+			return
+		}
+
+		if buffer.String() != expected {
+			t.Errorf("expected(%s) differ (got: %s)", expected, buffer.String())
+		}
+	})
+
+	t.Run("with image count", func(t *testing.T) {
+
+		buffer := &bytes.Buffer{}
+		o := &DfiOptions{
+			nocolor: true,
+			table: table.NewOutputTable(buffer),
+			count: true,
+		}
+
+		// ---
+		// NAME    IMAGE USED   ALLOCATABLE   CAPACITY    %USED
+		// node1   1K(1)        5000000K      10000000K   0%
+		// node2   2K(1)        5000000K      10000000K   0%
+		// ---
+		lines := []string{
+			"NAME    IMAGE USED   ALLOCATABLE   CAPACITY    %USED",
+			"node1   1K(1)        5000000K      10000000K   0%",
+			"node2   2K(1)        5000000K      10000000K   0%",
+			"",
+		}
+		expected := strings.Join(lines, "\n")
+		if err := o.dfi(testNodes); err != nil {
+			t.Errorf("unexpected error: %v", err)
+			return
+		}
+
+		if buffer.String() != expected {
+			t.Errorf("expected(%s) differ (got: %s)", expected, buffer.String())
+		}
+	})
+}
+
 func TestToUnit(t *testing.T) {
 
 	var tests = []struct {
@@ -218,31 +325,6 @@ func TestToUnit(t *testing.T) {
 
 func TestListImagesOnNode(t *testing.T) {
 
-	nodes := []v1.Node{
-		{
-			ObjectMeta: metav1.ObjectMeta{Name: "node1"},
-			Status: v1.NodeStatus{
-				Images: []v1.ContainerImage{
-					{
-						Names:     []string{"image1", "image2"},
-						SizeBytes: 1000,
-					},
-				},
-			},
-		},
-		{
-			ObjectMeta: metav1.ObjectMeta{Name: "node2"},
-			Status: v1.NodeStatus{
-				Images: []v1.ContainerImage{
-					{
-						Names:     []string{"image1"},
-						SizeBytes: 2000,
-					},
-				},
-			},
-		},
-	}
-
 	buffer := &bytes.Buffer{}
 	o := &DfiOptions{
 		table: table.NewOutputTable(buffer),
@@ -255,7 +337,7 @@ func TestListImagesOnNode(t *testing.T) {
 	// ---
 	expected := "NAME    IMAGE SIZE   IMAGE NAME\nnode1   1K           image2\nnode2   2K           image1\n"
 
-	if err := o.listImagesOnNode(nodes); err != nil {
+	if err := o.listImagesOnNode(testNodes); err != nil {
 		t.Errorf("unexpected error: %v", err)
 		return
 	}

@@ -15,6 +15,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/pkg/kubectl/util/templates"
+	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	// Initialize all known client auth plugins.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -73,6 +74,9 @@ type DfiOptions struct {
 
 	// list options
 	list bool
+
+	// k8s node client
+	nodeClient   clientv1.NodeInterface
 }
 
 // NewDfOptions is an instance of DfOptions
@@ -231,16 +235,10 @@ func (o *DfiOptions) dfi(nodes []v1.Node) error {
 		name := node.ObjectMeta.Name
 
 		// get status.capacity
-		capacity, cerr := node.Status.Capacity.StorageEphemeral().AsInt64()
-		if !cerr {
-			return fmt.Errorf("can not get ephemeral storage capacity")
-		}
+		capacity, _ := node.Status.Capacity.StorageEphemeral().AsInt64()
 
 		// get status.allocatable
-		allocatable, aerr := node.Status.Allocatable.StorageEphemeral().AsInt64()
-		if !aerr {
-			return fmt.Errorf("can not get ephemeral storage capacity")
-		}
+		allocatable, _ := node.Status.Allocatable.StorageEphemeral().AsInt64()
 
 		// get used storage by images and count images
 		used, count := util.GetImageUsage(node.Status.Images)
